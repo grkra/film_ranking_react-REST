@@ -1,51 +1,34 @@
-import React, { useState } from 'react';
+import React /*, { useState } */ from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Header from "./Header";
 import Footer from "./Footer";
-import FilmInput from './FilmInput';
-import Film from './Film';
-import Login from './Login';
+import Home from './Home';
+import LoginRegister from './LoginRegister';
+import useToken from './useToken';
 
 function App() {
-  const [filmsList, setFilmsList] = useState([]);
+  const { token, setToken } = useToken();
 
-  function addFilm(newFilm) {
-    setFilmsList(prevFilmList => {
-      return [...prevFilmList, newFilm];
-    });
+  if (!token) {
+    return (
+      <div>
+        <Header />
+        <LoginRegister setToken={setToken} />
+        <Footer />
+      </div >
+    );
   }
-
-  function deleteFilm(id) {
-    setFilmsList(prevList => {
-      return prevList.filter((film, index) => {
-        return index !== id;
-      });
-    });
-  }
-
-  let isLoggedIn = true;
 
   return (
     <div>
       <Header />
-      {isLoggedIn && <div>
-        <FilmInput onAdd={addFilm} />
-        {filmsList.map((film, index) => {
-          return (
-            <Film
-              key={index}
-              id={index}
-              title={film.title}
-              score={film.score}
-              review={film.review}
-              onDelete={deleteFilm}
-            />
-          );
-        })}
-      </div>
-      }
-      {!isLoggedIn && <Login />}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home token={token} />} />
+        </Routes>
+      </BrowserRouter>
       <Footer />
-    </div>
+    </div >
   );
 }
 

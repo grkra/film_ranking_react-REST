@@ -1,5 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
+import cors from "cors";
 
 const app = express();
 const port = 4000;
@@ -29,18 +30,21 @@ let users = [
     {
         id: 1,
         username: "grzes",
-        password: "123"
+        password: "123",
+        token: "token_grzes"
     },
     {
         id: 2,
         username: "qwe",
-        password: "qwe"
+        password: "qwe",
+        token: "token_qwe"
     }
 ]
 
 let lastFilmId = 3;
 let lastUserId = 2;
 
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -70,7 +74,7 @@ app.post("/login", (req, res) => {
     const checkIfUsernameExist = users.findIndex(user => user.username === username);
     if (checkIfUsernameExist > -1) {
         if (users[checkIfUsernameExist].password === password) {
-            res.status(200).json({ user: users[checkIfUsernameExist] })
+            res.status(200).json({ token: users[checkIfUsernameExist].token })
         } else {
             res.status(400).json({ error: `Incorrect password` })
         }
