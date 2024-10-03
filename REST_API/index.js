@@ -1,6 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
+import crypto from "crypto";
 
 const app = express();
 const port = 4000;
@@ -8,18 +9,21 @@ const port = 4000;
 let films = [
     {
         id: 1,
+        user: 1,
         title: "Pan Tadeusz",
         score: 3,
         review: "Ramota",
     },
     {
         id: 2,
+        user: 2,
         title: "Drużyna A",
         score: 4,
         review: "Stare ale jare",
     },
     {
         id: 3,
+        user: 1,
         title: "Gwiezdny Pył",
         score: 5,
         review: "Kapitan Sheakspear is the best",
@@ -54,16 +58,17 @@ app.post("/register", (req, res) => {
 
     const checkIfUsernameExist = users.findIndex(user => user.username === username);
     if (checkIfUsernameExist > -1) {
-        res.status(400).json({ error: `Username: ${username} already registered` })
+        res.status(400).json({ error: `Can't register as ${username}` })
     } else {
         const newUser = {
             id: ++lastUserId,
             username: username,
-            password: password
+            password: password,
+            token: crypto.randomBytes(30).toString("hex"),
         }
 
         users.push(newUser);
-        res.status(201).json(newUser);
+        res.status(201).json({ token: newUser.token });
     }
 });
 
@@ -88,30 +93,53 @@ app.get("/getUsers", (req, res) => {    //DO USUNIĘCIA!
 });
 
 app.get("/getFilms", (req, res) => {
-    res.json(films);
+    const token = req.query.token;
+    const checkIfUserExists = users.findIndex(user => user.token === token);
+    if (checkIfUserExists > -1) {
+        const userId = users[checkIfUserExists].id;
+        const usersFilms = films.filter((film) => { return film.user === userId })
+        res.status(200).json(usersFilms);
+    } else {
+        res.status(404).json({ error: 'Authorisation failed' });
+    }
 });
 
 app.post("/addFilm", (req, res) => {
-    const newFilm = {
-        id: ++lastFilmId,
-        title: req.body.title,
-        score: req.body.score,
-        review: req.body.review,
-    };
-
-    films.push(newFilm);
-    res.status(201).json(newFilm);
+    console.log("ADDING FILM");
+    const token = req.query.token;
+    console.log(token);
+    console.log(req.body);
+    const checkIfUserExists = users.findIndex(user => user.token === token);
+    if (checkIfUserExists > -1) {
+        const newFilm = {
+            id: ++lastFilmId,
+            user: users[checkIfUserExists].id,
+            title: req.body.title,
+            score: req.body.score,
+            review: req.body.review,
+        };
+        films.push(newFilm);
+        res.status(201).send("Added film");
+    } else {
+        res.status(404).json({ error: 'Authorisation failed' });
+    }
 });
 
 app.delete("/deleteFilm/:id", (req, res) => {
-    const id = parseInt(req.params.id);
-    const indexOfDeletedFilm = films.findIndex(film => film.id === id);
+    const token = req.query.token;
+    const checkIfUserExists = users.findIndex(user => user.token === token);
+    if (checkIfUserExists > -1) {
+        const id = parseInt(req.params.id);
+        const indexOfDeletedFilm = films.findIndex(film => film.id === id && film.user === users[checkIfUserExists].id);
 
-    if (indexOfDeledFilm > -1) {
-        films.splice(indexOfDeletedFilm, 1);
-        res.sendStatus(200);
+        if (indexOfDeletedFilm > -1) {
+            films.splice(indexOfDeletedFilm, 1);
+            res.status(200).send("Film deleted");
+        } else {
+            res.status(404).json({ error: `Film with id: ${id} not found` })
+        }
     } else {
-        res.status(404).json({ error: `Film with id: ${id} not found` })
+        res.status(404).json({ error: 'Authorisation failed' });
     }
 });
 

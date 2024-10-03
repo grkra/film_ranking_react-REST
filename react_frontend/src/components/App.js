@@ -4,7 +4,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import Home from './Home';
 import LoginRegister from './LoginRegister';
-import useToken from './useToken';
+import useToken from './services/useToken';
 
 function App() {
   const { token, setToken } = useToken();

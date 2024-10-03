@@ -19,7 +19,7 @@ function Film(props) {
 
   return (
     <div className="film">
-      <h1>{props.title}</h1>
+      <h3>{props.title}</h3>
       <p className="score">{showScore()}</p>
       <p>{props.review}</p>
       <Fab onClick={handleClick} color='inherit'>

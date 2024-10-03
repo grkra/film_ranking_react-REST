@@ -42,7 +42,6 @@ function LoginRegister(props) {
             setError(response.error)
         } else {
             props.setToken(response);
-            // ({token: "..."})
         }
     }
 
