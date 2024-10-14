@@ -46,7 +46,7 @@ function Home(props) {
 
     return (
         <div>
-            <div><h2> Hello Andrzej, what did you watch today? </h2></div>
+            <div><h2> Hello {props.username}, what did you watch today? </h2></div>
             <FilmInput onAdd={addFilm} />
             {filmsList.map((film, index) =>
                 <Film

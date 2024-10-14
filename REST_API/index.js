@@ -2,6 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import crypto from "crypto";
+import bcrypt from "bcrypt"
 
 const app = express();
 const port = 4000;
@@ -58,7 +59,7 @@ app.post("/register", (req, res) => {
 
     const checkIfUsernameExist = users.findIndex(user => user.username === username);
     if (checkIfUsernameExist > -1) {
-        res.status(400).json({ error: `Can't register as ${username}` })
+        res.status(400).json({ error: `Can't register as ${username}, try different username` })
     } else {
         const newUser = {
             id: ++lastUserId,
@@ -68,7 +69,8 @@ app.post("/register", (req, res) => {
         }
 
         users.push(newUser);
-        res.status(201).json({ token: newUser.token });
+        // res.status(201).json({ token: newUser.token });
+        res.status(201).json({ message: "User registered" });
     }
 });
 
@@ -92,6 +94,17 @@ app.get("/getUsers", (req, res) => {    //DO USUNIĘCIA!
     res.json(users);
 });
 
+app.get("/getUsername", (req, res) => {
+    const token = req.query.token;
+    const checkIfUserExists = users.findIndex(user => user.token === token);
+    if (checkIfUserExists > -1) {
+        const username = users[checkIfUserExists].username;
+        res.status(200).json({ username: username });
+    } else {
+        res.status(404).json({ error: 'Authorisation failed' });
+    }
+});
+
 app.get("/getFilms", (req, res) => {
     const token = req.query.token;
     const checkIfUserExists = users.findIndex(user => user.token === token);
@@ -105,10 +118,7 @@ app.get("/getFilms", (req, res) => {
 });
 
 app.post("/addFilm", (req, res) => {
-    console.log("ADDING FILM");
     const token = req.query.token;
-    console.log(token);
-    console.log(req.body);
     const checkIfUserExists = users.findIndex(user => user.token === token);
     if (checkIfUserExists > -1) {
         const newFilm = {

@@ -1,30 +1,40 @@
-import React /*, { useState } */ from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Header from "./Header";
 import Footer from "./Footer";
 import Home from './Home';
 import LoginRegister from './LoginRegister';
 import useToken from './services/useToken';
+import { getUsername } from './services/useUser';
 
 function App() {
-  const { token, setToken } = useToken();
+  const { token, setToken, deleteToken } = useToken();
+  const [username, setUsername] = useState("");
 
-  if (!token) {
-    return (
-      <div>
-        <Header />
-        <LoginRegister setToken={setToken} />
-        <Footer />
-      </div >
-    );
-  }
+  useEffect(
+    () => {
+      if (token) {
+        getUsername(token)
+          .then(response => setUsername(response.username))
+          .catch((error) => console.log(error));
+      } else {
+        setUsername("");
+      }
+    }, [token]
+  );
+
+
 
   return (
     <div>
-      <Header />
+      <Header token={token} deleteToken={deleteToken} />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home token={token} />} />
+          {!token
+            ? <Route path="/"
+              element={<LoginRegister setToken={setToken} />} />
+            : <Route path="/"
+              element={<Home token={token} username={username} />} />}
         </Routes>
       </BrowserRouter>
       <Footer />

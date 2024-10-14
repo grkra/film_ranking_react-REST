@@ -171,3 +171,19 @@ p.error-message {
   width: 100%;
   text-align: center;
 }
+
+p.success-message {
+  color: green;
+  width: 100%;
+  text-align: center;
+}
+
+button.logout-button {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  color: #fff;
+  border: none;
+  width: 100px;
+  height: 36px;
+}
