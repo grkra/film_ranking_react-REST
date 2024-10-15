@@ -7,6 +7,9 @@ import bcrypt from "bcrypt"
 const app = express();
 const port = 4000;
 
+// number of times password will be hashed
+const saltRounds = 10;
+
 let films = [
     {
         id: 1,
@@ -61,16 +64,23 @@ app.post("/register", (req, res) => {
     if (checkIfUsernameExist > -1) {
         res.status(400).json({ error: `Can't register as ${username}, try different username` })
     } else {
-        const newUser = {
-            id: ++lastUserId,
-            username: username,
-            password: password,
-            token: crypto.randomBytes(30).toString("hex"),
-        }
+        bcrypt.hash(password, saltRounds, (error, hashedPassword) => {
+            if (error) {
+                console.log("Error when hashing password: " + error);
+                res.status(500).json({ error: `Couldn't register due to internal error, please try later` })
+            } else {
+                const newUser = {
+                    id: ++lastUserId,
+                    username: username,
+                    password: hashedPassword,
+                    token: crypto.randomBytes(30).toString("hex"),
+                }
 
-        users.push(newUser);
-        // res.status(201).json({ token: newUser.token });
-        res.status(201).json({ message: "User registered" });
+                users.push(newUser);
+                // res.status(201).json({ token: newUser.token });
+                res.status(201).json({ message: "User registered" });
+            }
+        })
     }
 });
 
@@ -80,11 +90,19 @@ app.post("/login", (req, res) => {
 
     const checkIfUsernameExist = users.findIndex(user => user.username === username);
     if (checkIfUsernameExist > -1) {
-        if (users[checkIfUsernameExist].password === password) {
-            res.status(200).json({ token: users[checkIfUsernameExist].token })
-        } else {
-            res.status(400).json({ error: `Incorrect password` })
-        }
+        const storedPassword = users[checkIfUsernameExist].password;
+        bcrypt.compare(password, storedPassword, (error, result) => {
+            if (error) {
+                console.log("Error when checking password: " + error);
+                res.status(500).json({ error: `Couldn't log in due to internal error, please try later` })
+            } else {
+                if (result) {
+                    res.status(200).json({ token: users[checkIfUsernameExist].token })
+                } else {
+                    res.status(400).json({ error: `Incorrect password` })
+                }
+            }
+        })
     } else {
         res.status(400).json({ error: `User not found` })
     }
