@@ -4,25 +4,25 @@ import FilmInput from './FilmInput';
 import Film from './Film';
 
 function Home(props) {
-    const [triggerGetFilms, setTriggerGetFilms] = useState(false);
+    const [triggerGetFilms, setTriggerGetFilms] = useState(true);
     const [filmsList, setFilmsList] = useState([]);
     const mounted = useRef(true);
 
     useEffect(() => {
         mounted.current = true;
-        if (filmsList.length && !alert) {
+        if (!triggerGetFilms) {
             return;
         }
         getFilms(props.token)
             .then((films) => {
                 if (mounted.current) {
-                    setFilmsList(films);
+                    setFilmsList(films || []);
                     setTriggerGetFilms(false);
                 }
             })
             .catch((error) => console.log(error));
         return () => mounted.current = false;
-    }, [triggerGetFilms, filmsList, props.token]);
+    }, [triggerGetFilms, props.token]);
 
     function addFilm(newFilm) {
         postFilm(props.token, newFilm)
